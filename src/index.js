@@ -1,4 +1,4 @@
-import config from '../config.js'
+import config from '../config/config.js'
 let Page = require("./Page.js");
 
 function OS(pageQuantity) {
