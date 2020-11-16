@@ -1,0 +1,7 @@
+{
+  "name": "page-replacement-algorythm",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Ivan Burlakov <burlakovv.ivan@gmail.com>",
+  "license": "MIT"
+}
