@@ -1,34 +1,64 @@
-import config from '../config/config.js'
-let Page = require("./Page.js");
+setImmediate(() => {
+  const config = require("../config/config.js");
+  const { generateClassObjectArray } = require("./functions.js");
+  const PhysPage = require("./PhysPage.js");
+  const Process = require("./Process.js");
 
-function OS(pageQuantity) {
-  const bootTime = Date.now();
+  function os() {
+    let memoryRefs = 0;
+    let physPageTable = generateClassObjectArray(
+      PhysPage,
+      config.physicalPages
+    );
+    let usedPhysPageTable = [];
+    let processes = [];
+    let activeProcesses = 0;
+    let processCreateTime = 3;
 
-  const pageTable = [];
+    processes.push(new Process(processes.length));
+    activeProcesses++;
 
-  generatePages();
+    // All processes loop
+    while (activeProcesses > 0) {
+      // Each process quant loop
+      let currentProcessIndex = 0;
+      while (currentProcessIndex < processes.length) {
+        let quant = 0;
 
-  // Tick таймер на кожні 20 мс.
-  setInterval(Tick, 20);
-}
+        while (quant < config.quantRefs) {
+          // Create new process when it's time to
+          if (
+            processes.length < config.maxProcessQuantity &&
+            memoryRefs === processCreateTime
+          ) {
+            processes.push(new Process(processes.length));
+            activeProcesses++;
+            processCreateTime += 3;
+          }
 
-function Process() {
-  setTimeout();
-}
+          if (!processes[currentProcessIndex].finishedWorking) {
+            // What to do with process
+            processes[currentProcessIndex].work(
+              processes,
+              physPageTable,
+              usedPhysPageTable,
+            );
+          } else {
+            // Process finished work, removing
+            activeProcesses--;
+            break;
+          }
+          memoryRefs++;
+          quant++;
+        }
+        currentProcessIndex++;
+      }
+    }
 
-function Tick() {
-  pageTable.forEach((el) => el.reset());
-}
-
-function randomInteger(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function generatePages() {
-  for (i = pageQuantity; i > 0; i--) {
-    pageTable.push(new Page());
+    // console.log(128 >>> 1)
+    console.log("Processes successfully finished working.");
   }
-}
 
-// Запускаемо ОС
-OS(20);
+  // Launching OS
+  os();
+});
