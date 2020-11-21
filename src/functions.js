@@ -1,25 +1,4 @@
 module.exports = {
-  mmu: (pageTable, request, targetPageIndex) => {
-    if (request === "checkP") {
-      if (pageTable[targetPageIndex].P === 0) {
-        return 0
-      }
-      return 1;
-    } else if (request === "aging") {
-      pageTable.forEach((page) => {
-        page.R = page.R >>> 1;
-      });
-      return pageTable;
-    } else if (request === "read") {
-      pageTable[targetPageIndex].R += 128;
-      return pageTable;
-    } else if (request === "write") {
-      pageTable[targetPageIndex].R += 128;
-      pageTable[targetPageIndex].M = 1;
-      return pageTable;
-    }
-  },
-
   chance: (targetPercentage) => {
     const result = Math.floor(Math.random() * (100 - 1 + 1)) + 1;
     if (result <= targetPercentage) {
@@ -66,5 +45,26 @@ module.exports = {
     );
 
     return physPageIndex;
+  },
+
+  mmu: (pageTable, request, targetPageIndex) => {
+    if (request === "checkP") {
+      if (pageTable[targetPageIndex].P === 0) {
+        return 0
+      }
+      return 1;
+    } else if (request === "aging") {
+      pageTable.forEach((page) => {
+        page.R = page.R >>> 1;
+      });
+      return pageTable;
+    } else if (request === "read") {
+      pageTable[targetPageIndex].R += 128;
+      return pageTable;
+    } else if (request === "write") {
+      pageTable[targetPageIndex].R += 128;
+      pageTable[targetPageIndex].M = 1;
+      return pageTable;
+    }
   },
 };

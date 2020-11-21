@@ -52,7 +52,6 @@ class Process {
       (page) => page.number === targetPageNumber
     );
 
-    // mmu
     this.pageTable = mmu(this.pageTable, refType, targetPageIndex)
 
     if (mmu(this.pageTable, 'checkP', targetPageIndex)) {
@@ -64,7 +63,6 @@ class Process {
         usedPhysPageTable.unshift(physPage);
         physPageIndex = 0;
       } else {
-        // kernel();
         let previousParentProcessIndex;
         let previousParentProcessPageIndex;
 

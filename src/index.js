@@ -1,4 +1,4 @@
-setImmediate(() => {
+
   const config = require("../config/config.js");
   const { generateClassObjectArray } = require("./functions.js");
   const PhysPage = require("./PhysPage.js");
@@ -61,4 +61,3 @@ setImmediate(() => {
 
   // Launching OS
   os();
-});
