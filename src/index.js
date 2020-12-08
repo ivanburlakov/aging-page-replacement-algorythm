@@ -55,7 +55,6 @@
       }
     }
 
-    // console.log(128 >>> 1)
     console.log("Processes successfully finished working.");
   }
 
