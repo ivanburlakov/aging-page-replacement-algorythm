@@ -26,18 +26,17 @@ class Process {
     let targetPageIndex;
 
     if (chance(50)) {
-      refType = 'read'
+      refType = "read";
     } else {
-      refType = 'write'
+      refType = "write";
     }
 
-    this.pageTable = mmu(this.pageTable, 'aging')
-
     if (this.refs === this.workingSetUpdate) {
-      this.pageTable.sort((a, b) => b.R - a.R);
       this.workingSet = [];
       for (i = 0; i < 5; i++) {
-        this.workingSet.push({ number: this.pageTable[i].number });
+        this.workingSet.push({
+          number: randomArrayElement(this.pageTable).number,
+        });
       }
       this.workingSetUpdate += config.changeWorkingSetRefs;
     }
@@ -52,9 +51,9 @@ class Process {
       (page) => page.number === targetPageNumber
     );
 
-    this.pageTable = mmu(this.pageTable, refType, targetPageIndex)
+    if (mmu(this.pageTable, "checkP", targetPageIndex) === 1) {
+      this.pageTable = mmu(this.pageTable, refType, targetPageIndex);
 
-    if (mmu(this.pageTable, 'checkP', targetPageIndex)) {
       let physPageIndex;
 
       if (physPageTable.length > 0) {
@@ -63,40 +62,56 @@ class Process {
         usedPhysPageTable.unshift(physPage);
         physPageIndex = 0;
       } else {
+        this.pageTable = mmu(this.pageTable, refType, targetPageIndex);
+
         let previousParentProcessIndex;
         let previousParentProcessPageIndex;
 
         physPageIndex = kernel(processes, usedPhysPageTable);
 
-        previousParentProcessIndex =
-          usedPhysPageTable[physPageIndex].ref.processNumber;
+        const { processNumber, pageNumber } = usedPhysPageTable[
+          physPageIndex
+        ].ref;
 
-        previousParentProcessPageIndex =
-          usedPhysPageTable[physPageIndex].ref.pageNumber;
+        previousParentProcessIndex = processNumber;
 
-        processes[previousParentProcessIndex].pageTable[
-          previousParentProcessPageIndex
-        ].P = 0;
-        processes[previousParentProcessIndex].pageTable[
-          previousParentProcessPageIndex
-        ].R = 0;
-        processes[previousParentProcessIndex].pageTable[
-          previousParentProcessPageIndex
-        ].M = 0;
-        processes[previousParentProcessIndex].pageTable[
-          previousParentProcessPageIndex
-        ].physPageNumber = null;
+        previousParentProcessPageIndex = pageNumber;
+
+        Object.assign(
+          processes[previousParentProcessIndex].pageTable[
+            previousParentProcessPageIndex
+          ],
+          {
+            P: 0,
+            R: 0,
+            M: 0,
+            physPageNumber: null,
+          }
+        );
       }
 
-      usedPhysPageTable[physPageIndex].ref.processNumber = this.number;
-      usedPhysPageTable[physPageIndex].ref.pageNumber = targetPageNumber;
+      Object.assign(usedPhysPageTable[physPageIndex].ref, {
+        processNumber: this.number,
+        pageNumber: targetPageNumber,
+      });
+
       this.pageTable[targetPageIndex].physPageNumber =
         usedPhysPageTable[physPageIndex].number;
     }
 
-    this.pageTable.sort((a, b) => b.R - a.R);
     this.refs++;
     if (this.refs === config.processLifetimeRefs) {
+      this.pageTable.forEach((el) => {
+        const physPageNumber = el.physPageNumber;
+        if (el.P === 0) {
+          const index = usedPhysPageTable.findIndex(
+            (page) => page.number === physPageNumber
+          );
+          physPageTable.push(usedPhysPageTable[physPageNumber]);
+
+          usedPhysPageTable.splice(index, 1);
+        }
+      });
       this.finishedWorking = true;
     }
   }

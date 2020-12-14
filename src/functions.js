@@ -28,41 +28,25 @@ module.exports = {
   },
 
   kernel: (processes, usedPhysPageTable) => {
-    let usedPagesSorted = [];
-
-    usedPhysPageTable.forEach((page) => {
-      usedPagesSorted.push({
-        number: page.number,
-        ref: page.ref,
-        R: processes[page.ref.processNumber].pageTable[page.ref.pageNumber].R,
-      });
-    });
-
-    usedPagesSorted = usedPagesSorted.sort((a, b) => a.R - b.R);
-    const physPageNumber = usedPagesSorted[0].number;
-    physPageIndex = usedPhysPageTable.findIndex(
-      (page) => page.number === physPageNumber
-    );
-
-    return physPageIndex;
+    return usedPagesSorted.length - 1;
   },
 
-  mmu: (pageTable, request, targetPageIndex) => {
+  mmu: (pageTable, request, targetPageIndex, processes) => {
     if (request === "checkP") {
-      if (pageTable[targetPageIndex].P === 0) {
-        return 0
-      }
-      return 1;
+      return pageTable[targetPageIndex].P
     } else if (request === "aging") {
-      pageTable.forEach((page) => {
-        page.R = page.R >>> 1;
-      });
-      return pageTable;
+      pageTable.forEach(el => {
+        el.counter >>> 1;
+        el.counter += processes[el.ref.processNumber].PageTable[el.ref.pageNumber] << 30;
+        processes[el.ref.processNumber].PageTable[el.ref.pageNumber].R = 0;
+      })
+      pageTable.sort((a, b) => b.counter - a.counter);
+      return {pageTable, processes};
     } else if (request === "read") {
-      pageTable[targetPageIndex].R += 128;
+      pageTable[targetPageIndex].R = 1;
       return pageTable;
     } else if (request === "write") {
-      pageTable[targetPageIndex].R += 128;
+      pageTable[targetPageIndex].R = 1;
       pageTable[targetPageIndex].M = 1;
       return pageTable;
     }
